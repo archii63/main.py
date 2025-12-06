@@ -1,0 +1,124 @@
+git tag v0.1.0
+git push origin v0.1.0
+hello-github-template/
+├─ .github/
+│  └─ workflows/
+│     └─ ci.yml
+├─ src/
+│  └─ hello_github/
+│     └─ __init__.py
+│     └─ app.py
+├─ tests/
+│  └─ test_app.py
+├─ .gitignore
+├─ README.md
+├─ requirements.txt
+└─ LICENSE
+# Hello GitHub Template
+
+A small, well-documented starter project intended to be published on GitHub.
+It includes:
+- A tiny Python package (`hello_github`) with a simple function.
+- A pytest test.
+- A GitHub Actions workflow for CI and automatic release on tag push.
+- MIT license.
+
+## Quickstart
+
+1. Clone this repo or create a new repo and copy the files.
+2. Create a virtualenv and install dependencies:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate   # on Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
+pytest
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin git@github.com:YOUR_USERNAME/hello-github-template.git
+git push -u origin main
+
+---
+
+# 2) `src/hello_github/app.py`
+```python
+"""hello_github.app
+A minimal module with a small function suitable for tests and demo.
+"""
+
+def greet(name: str) -> str:
+    """
+    Return a greeting message.
+
+    Example:
+        >>> greet("GitHub")
+        'Hello, GitHub!'
+    """
+    if not isinstance(name, str):
+        raise TypeError("name must be a string")
+    cleaned = name.strip()
+    if cleaned == "":
+        return "Hello, world!"
+    return f"Hello, {cleaned}!"
+from hello_github import greet
+import pytest
+
+def test_greet_basic():
+    assert greet("GitHub") == "Hello, GitHub!"
+
+def test_greet_strip():
+    assert greet("  Alice  ") == "Hello, Alice!"
+
+def test_greet_empty():
+    assert greet("") == "Hello, world!"
+
+def test_greet_type_error():
+    with pytest.raises(TypeError):
+        greet(None)
+pytest>=7.0
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'   # triggers for release when tags like v1.0.0 are pushed
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          pytest -q
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            Automated release created by workflow for tag ${{ github.ref_name }}.
