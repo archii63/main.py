@@ -40,7 +40,9 @@ git remote add origin git@github.com:YOUR_USERNAME/hello-github-template.git
 git push -u origin main
 
 ---
-
+ python -m venv .venv
+   source .venv/bin/activate   # on Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
 # 2) `src/hello_github/app.py`
 ```python
 """hello_github.app
