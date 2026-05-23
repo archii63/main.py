@@ -52,7 +52,10 @@ A minimal module with a small function suitable for tests and demo.
 def greet(name: str) -> str:
     """
     Return a greeting message.
-
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate   # on Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
     Example:
         >>> greet("GitHub")
         'Hello, GitHub!'
