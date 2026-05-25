@@ -59,7 +59,10 @@ def greet(name: str) -> str:
     Example:
         >>> greet("GitHub")
         'Hello, GitHub!'
-    """
+    """A small, well-documented starter project intended to be published on GitHub.
+It includes:
+- A tiny Python package (`hello_github`) with a simple function.
+- A pytest test.
     if not isinstance(name, str):
         raise TypeError("name must be a string")
     cleaned = name.strip()
