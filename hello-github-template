@@ -16,13 +16,6 @@ hello-github-template/
 └─ LICENSE
 # Hello GitHub Template
 
-A small, well-documented starter project intended to be published on GitHub.
-It includes:
-- A tiny Python package (`hello_github`) with a simple function.
-- A pytest test.
-- A GitHub Actions workflow for CI and automatic release on tag push.
-- MIT license.
-
 ## Quickstart
 
 1. Clone this repo or create a new repo and copy the files.
@@ -49,15 +42,13 @@ git push -u origin main
 A minimal module with a small function suitable for tests and demo.
 """
 
-def greet(name: str) -> str:
-    """
-    Return a greeting message.
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate   # on Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-    Example:
-        >>> greet("GitHub")
+A small, well-documented starter project intended to be published on GitHub.
+It includes:
+- A tiny Python package (`hello_github`) with a simple function.
+- A pytest test.
+- A GitHub Actions workflow for CI and automatic release on tag push.
+- MIT license.
+
         'Hello, GitHub!'
     """A small, well-documented starter project intended to be published on GitHub.
 It includes:
