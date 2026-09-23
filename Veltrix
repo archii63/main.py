@@ -1,0 +1,157 @@
+"""
+Veltrix
+-------
+Minimal, production-oriented API health monitor.
+
+Features:
+- Monitor multiple HTTP endpoints
+- Measure response latency
+- Detect HTTP and connection failures
+- Configurable timeout
+- JSON output
+- Async execution for faster checks
+
+Requirements:
+    pip install aiohttp
+
+Usage:
+    python veltrix.py
+"""
+
+import asyncio
+import json
+import time
+from dataclasses import asdict, dataclass
+from typing import List
+
+import aiohttp
+
+
+@dataclass
+class HealthResult:
+    name: str
+    url: str
+    status: str
+    http_status: int | None
+    latency_ms: float | None
+    error: str | None = None
+
+
+SERVICES = [
+    {
+        "name": "GitHub",
+        "url": "https://github.com",
+    },
+    {
+        "name": "Python",
+        "url": "https://www.python.org",
+    },
+    {
+        "name": "Cloudflare",
+        "url": "https://www.cloudflare.com",
+    },
+]
+
+TIMEOUT_SECONDS = 8
+
+
+async def check_service(
+    session: aiohttp.ClientSession,
+    name: str,
+    url: str,
+) -> HealthResult:
+    start = time.perf_counter()
+
+    try:
+        async with session.get(
+            url,
+            timeout=aiohttp.ClientTimeout(total=TIMEOUT_SECONDS),
+        ) as response:
+
+            latency = round(
+                (time.perf_counter() - start) * 1000,
+                2,
+            )
+
+            status = "healthy" if 200 <= response.status < 400 else "unhealthy"
+
+            return HealthResult(
+                name=name,
+                url=url,
+                status=status,
+                http_status=response.status,
+                latency_ms=latency,
+            )
+
+    except asyncio.TimeoutError:
+        return HealthResult(
+            name=name,
+            url=url,
+            status="timeout",
+            http_status=None,
+            latency_ms=None,
+            error=f"Request exceeded {TIMEOUT_SECONDS}s",
+        )
+
+    except aiohttp.ClientError as exc:
+        return HealthResult(
+            name=name,
+            url=url,
+            status="unreachable",
+            http_status=None,
+            latency_ms=None,
+            error=str(exc),
+        )
+
+    except Exception as exc:
+        return HealthResult(
+            name=name,
+            url=url,
+            status="error",
+            http_status=None,
+            latency_ms=None,
+            error=str(exc),
+        )
+
+
+async def monitor(services: List[dict]) -> List[HealthResult]:
+    connector = aiohttp.TCPConnector(limit=20)
+
+    async with aiohttp.ClientSession(connector=connector) as session:
+        tasks = [
+            check_service(
+                session,
+                service["name"],
+                service["url"],
+            )
+            for service in services
+        ]
+
+        return await asyncio.gather(*tasks)
+
+
+def build_report(results: List[HealthResult]) -> dict:
+    healthy = sum(result.status == "healthy" for result in results)
+
+    return {
+        "summary": {
+            "total": len(results),
+            "healthy": healthy,
+            "unhealthy": len(results) - healthy,
+        },
+        "services": [asdict(result) for result in results],
+    }
+
+
+def main() -> None:
+    results = asyncio.run(monitor(SERVICES))
+    report = build_report(results)
+
+    print(json.dumps(report, indent=2))
+
+    with open("health_report.json", "w", encoding="utf-8") as file:
+        json.dump(report, file, indent=2)
+
+
+if __name__ == "__main__":
+    main()
